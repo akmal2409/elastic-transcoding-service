@@ -1,0 +1,40 @@
+services:
+  #  Default credentials minioadmin:minioadmin
+  s3-01:
+    image: "quay.io/minio/minio:RELEASE.2023-06-23T20-26-00Z"
+    hostname: "s3-01"
+    container_name: "s3-01"
+    networks:
+      - transcoding
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    command: "server /data --console-address \":9001\""
+    restart: "always"
+    healthcheck:
+      test: "curl --silent --fail http://localhost:9001 || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - "s3-01_data:/data"
+
+  rabbit-01:
+    image: rabbitmq:3.10.25-management-alpine
+    hostname: "rabbit-01"
+    container_name: "rabbit-01"
+    restart: "always"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - "rabbit-01_data:/var/lib/rabbitmq"
+    
+
+volumes:
+  rabbit-01_data:
+  s3-01_data:
+
+networks:
+  transcoding:
+    driver: bridge
