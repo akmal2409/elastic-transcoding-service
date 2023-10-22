@@ -7,14 +7,18 @@
   </appender>
 
   <root level="debug">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="STDOUT"/>
   </root>
 
   <logger name="software.amazon.awssdk" level="warn">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="STDOUT"/>
   </logger>
 
   <logger name="io.netty" level="warn">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <logger name="com.github.kokorin.jaffree" level="warn">
+    <appender-ref ref="STDOUT"/>
   </logger>
 </configuration>

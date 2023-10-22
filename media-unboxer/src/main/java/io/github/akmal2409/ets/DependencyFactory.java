@@ -1,9 +1,17 @@
 package io.github.akmal2409.ets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.rabbitmq.client.ConnectionFactory;
 import io.github.akmal2409.ets.store.MediaStore;
+import io.github.akmal2409.ets.unboxing.MediaUnboxer;
+import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ExecutorService;
+import net.bramp.ffmpeg.FFmpeg;
+import net.bramp.ffmpeg.FFmpegExecutor;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -69,5 +77,25 @@ public class DependencyFactory {
   public MediaStore newS3Store(S3TransferManager transferManager) {
     return new MediaStore(configuration.getMediaFolder(),
         transferManager);
+  }
+
+  public FFmpegExecutor newFFmpegExecutor() {
+    try {
+      return new FFmpegExecutor(
+          new FFmpeg(configuration.getFFmpegPath().toString()),
+          new net.bramp.ffmpeg.FFprobe(configuration.getFFProbePath().toString())
+      );
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public FFprobe newFFprobe() {
+    return FFprobe.atPath(configuration.getFFProbePath().getParent());
+  }
+
+  public MediaUnboxer newMediaUnboxer(FFmpegExecutor fFmpegExecutor,
+      FFprobe fFprobe, ExecutorService executorService) {
+    return new MediaUnboxer(fFmpegExecutor, fFprobe, executorService, Duration.of(4, ChronoUnit.MINUTES));
   }
 }

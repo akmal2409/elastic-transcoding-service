@@ -4,7 +4,8 @@ import java.util.UUID;
 
 public record Job(
     UUID jobId,
-    String source
+    String source,
+    String out
 ) {
 
 }

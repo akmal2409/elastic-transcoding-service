@@ -12,8 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.DirectoryUpload;
 import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
 import software.amazon.awssdk.transfer.s3.model.FileDownload;
+import software.amazon.awssdk.transfer.s3.model.UploadDirectoryRequest;
 import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
 
 /**
@@ -83,6 +85,43 @@ public class MediaStore {
       throw new VideoDownloadException("Download failed because it was cancelled", e, jobId);
     } catch (CompletionException e) {
       throw new VideoDownloadException("Download failed due to exception", e.getCause(), jobId);
+    }
+  }
+
+  /**
+   * Uploads directory with processed files such as segments, index file, audio etc. to the
+   * destination bucket with a prefix. Files located at the top of the folder will have
+   * {@code keyPrefix} all files in the nested directories will have a key: {@code keyPrefix} +
+   * directories + fileName
+   *
+   * @param output protocol formatted string e.g. s3://bucket/keyPrefix
+   * @param directory path to upload.
+   */
+  public void uploadProcessedFiles(String output,
+      @NotNull Path directory) {
+    S3Output s3Output = S3Output.from(output);
+
+    log.debug(
+        "message=Starting upload of processed files from directory {} to bucket {} with key {};bucket={}",
+        directory, s3Output.getBucket(), s3Output.getKey(), s3Output.getBucket());
+
+    final var uploadRequest = UploadDirectoryRequest.builder()
+                                  .followSymbolicLinks(false)
+                                  .maxDepth(10)
+                                  .s3Prefix(s3Output.getKey())
+                                  .source(directory)
+                                  .bucket(s3Output.getBucket())
+                                  .build();
+
+    final DirectoryUpload upload = this.s3TransferManager.uploadDirectory(uploadRequest);
+
+    try {
+      upload.completionFuture().join();
+      log.debug(
+          "message=Finished upload of processed files from directory {} to bucket {} with key {};bucket={}",
+          directory, s3Output.getBucket(), s3Output.getKey(), s3Output.getBucket());
+    } catch (CompletionException e) {
+      throw new ProcessedFilesUploadFailedException(directory, s3Output.getBucket(), s3Output.getBucket());
     }
   }
 

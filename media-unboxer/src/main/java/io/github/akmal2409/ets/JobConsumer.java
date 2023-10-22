@@ -7,6 +7,11 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.github.akmal2409.ets.store.MediaStore;
+import io.github.akmal2409.ets.unboxing.ContainerFormat;
+import io.github.akmal2409.ets.unboxing.MediaCollection;
+import io.github.akmal2409.ets.unboxing.MediaType;
+import io.github.akmal2409.ets.unboxing.MediaUnboxer;
+import io.github.akmal2409.ets.utils.FileUtils;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +28,19 @@ public class JobConsumer extends DefaultConsumer {
 
   private static final Logger log = LoggerFactory.getLogger(JobConsumer.class);
   private final ObjectMapper objectMapper;
-  private final MediaStore s3Store;
+  private final MediaStore mediaStore;
+  private final MediaUnboxer mediaUnboxer;
+  private final String outboundQueue;
+  private final String outboundExchange;
 
-  public JobConsumer(Channel channel, ObjectMapper objectMapper, MediaStore s3Store) {
+  public JobConsumer(Channel channel, ObjectMapper objectMapper, MediaStore s3Store,
+      MediaUnboxer mediaUnboxer, String outboundQueue, String outboundExchange) {
     super(channel);
     this.objectMapper = objectMapper;
-    this.s3Store = s3Store;
+    this.mediaStore = s3Store;
+    this.mediaUnboxer = mediaUnboxer;
+    this.outboundQueue = outboundQueue;
+    this.outboundExchange = outboundExchange;
   }
 
   @Override
@@ -61,16 +73,31 @@ public class JobConsumer extends DefaultConsumer {
       return;
     }
 
-    final var mediaPath = s3Store.downloadSource(job.jobId(), job.source());
+    final var mediaPath = mediaStore.downloadSource(job.jobId(), job.source());
 
-    // Step 3: Get all streams
-    // Step 4: Extract all streams
-    // Step 5: Analyse
-    // Step 6: Build report
-    // Step 7: Upload
-    // Step 8: Finish
+    try {
+      // unify container format for all videos
+      final var convertedMediaPath = mediaUnboxer.convertContainerFormat(mediaPath,
+          mediaPath.getParent(), ContainerFormat.MKV, MediaType.VIDEO);
+      final var unboxedFilesPath = convertedMediaPath.getParent().resolve("unboxed");
 
-    getChannel().basicAck(envelope.getDeliveryTag(), false);
+      final MediaCollection mediaCollection =
+          mediaUnboxer.unboxMediaContainer(convertedMediaPath, unboxedFilesPath);
+
+      // upload unboxed media to the output destination
+      mediaStore.uploadProcessedFiles(job.out(), unboxedFilesPath);
+
+      final var report = new CompletedUnboxing(
+          mediaCollection.videos(), mediaCollection.audio(), mediaCollection.subtitles(),
+          job.out()
+      );
+
+      getChannel().basicPublish(outboundExchange, outboundQueue, null,
+          objectMapper.writeValueAsBytes(report));
+      getChannel().basicAck(envelope.getDeliveryTag(), false);
+    } finally {
+      FileUtils.deleteDirectory(mediaPath.getParent());
+    }
   }
 
   private void validateJob(Job job) {

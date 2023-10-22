@@ -20,6 +20,10 @@ public class Configuration {
     return "media-unboxing-job-queue";
   }
 
+  public String getOutboundTaskQueueName() {
+    return "media-unboxing-job-completion-queue";
+  }
+
   public String getS3Region() {
     return "us-east-1";
   }
@@ -30,5 +34,13 @@ public class Configuration {
 
   public Path getMediaFolder() {
     return Path.of("/tmp");
+  }
+
+  public Path getFFmpegPath() {
+    return Path.of("/opt/homebrew/bin/ffmpeg");
+  }
+
+  public Path getFFProbePath() {
+    return Path.of("/opt/homebrew/bin/ffprobe");
   }
 }

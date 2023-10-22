@@ -22,7 +22,7 @@ public class JobSender {
 
     channel.basicPublish("", configuration.getInboundTaskQueueName(),
         null, new ObjectMapper().writeValueAsBytes(
-            new Job(jobId, "s3://raw/video.mkv")
+            new Job(jobId, "s3://raw/complete.mkv", "s3://unboxed")
         ));
 
     LoggerFactory.getLogger(JobSender.class).info("Complete sending");
