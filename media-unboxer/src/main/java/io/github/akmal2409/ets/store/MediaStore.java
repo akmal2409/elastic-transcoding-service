@@ -20,9 +20,9 @@ import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
  * Class containing required operations for carrying out a preprocessing job such as downloading the
  * source video file and uploading preprocessed files.
  */
-public class S3Store {
+public class MediaStore {
 
-  private static final Logger log = LoggerFactory.getLogger(S3Store.class);
+  private static final Logger log = LoggerFactory.getLogger(MediaStore.class);
 
   /**
    * Storage folder that keeps the source files. {videoFolder}/{jobId}/{filename}.{extension}
@@ -30,7 +30,7 @@ public class S3Store {
   private final Path videoFolder;
   private final S3TransferManager s3TransferManager;
 
-  public S3Store(@NotNull Path videoFolder,
+  public MediaStore(@NotNull Path videoFolder,
       @NotNull S3TransferManager s3TransferManager) {
     this.videoFolder = videoFolder;
     this.s3TransferManager = s3TransferManager;
@@ -89,7 +89,7 @@ public class S3Store {
   private Path createJobDirectoryOrElseFail(UUID jobId) throws IOException {
     final var jobFileFolder = videoFolder.resolve(jobId.toString());
 
-    synchronized (S3Store.class) {
+    synchronized (MediaStore.class) {
       if (Files.exists(jobFileFolder)) {
         log.error("message=Duplicate job detected;jobId={}", jobId);
         throw new DuplicateJobException(
