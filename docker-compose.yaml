@@ -29,11 +29,24 @@ services:
       - "15672:15672"
     volumes:
       - "rabbit-01_data:/var/lib/rabbitmq"
-    
+  
+  postgres-01:
+    image: postgres:alpine3.18
+    hostname: "postgres-01"
+    container_name: 'postgres-01'
+    restart: 'always'
+    environment:
+      POSTGRES_USER: ${POSTGRES_ROOT_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      POSTGRES_DB: 'orchestrator'
+    volumes:
+      - 'postgres-01_data:/var/lib/postgresql/data'
+
 
 volumes:
   rabbit-01_data:
   s3-01_data:
+  postgres-01_data:
 
 networks:
   transcoding:
