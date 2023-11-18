@@ -4,8 +4,6 @@ services:
     image: "quay.io/minio/minio:RELEASE.2023-06-23T20-26-00Z"
     hostname: "s3-01"
     container_name: "s3-01"
-    networks:
-      - transcoding
     ports:
       - "9001:9001"
       - "9000:9000"
@@ -18,6 +16,8 @@ services:
       retries: 5
     volumes:
       - "s3-01_data:/data"
+    networks:
+      - transcoding
 
   rabbit-01:
     image: rabbitmq:3.10.25-management-alpine
@@ -29,6 +29,8 @@ services:
       - "15672:15672"
     volumes:
       - "rabbit-01_data:/var/lib/rabbitmq"
+    networks:
+      - transcoding
   
   postgres-01:
     image: postgres:alpine3.18
@@ -43,6 +45,8 @@ services:
       - 'postgres-01_data:/var/lib/postgresql/data'
     ports:
       - '5432:5432'
+    networks:
+      - transcoding
 
 
 volumes:
