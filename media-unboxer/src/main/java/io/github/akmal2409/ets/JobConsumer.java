@@ -87,7 +87,7 @@ public class JobConsumer extends DefaultConsumer {
       // upload unboxed media to the output destination
       mediaStore.uploadProcessedFiles(job.out(), unboxedFilesPath);
 
-      final var report = new CompletedUnboxing(
+      final var report = new CompletedUnboxing(job.jobId(),
           mediaCollection.videos(), mediaCollection.audio(), mediaCollection.subtitles(),
           job.out()
       );
