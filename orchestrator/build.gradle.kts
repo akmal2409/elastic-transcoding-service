@@ -24,19 +24,35 @@ repositories {
 	mavenCentral()
 }
 
+val awsSdkVersion = "2.21.26"
+
 dependencies {
+	implementation(platform("software.amazon.awssdk:bom:$awsSdkVersion"))
+
+	// AWS
+	implementation("software.amazon.awssdk:s3")
+
+	// Spring boot
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+	// misc
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.slf4j:slf4j-api")
+	implementation("ch.qos.logback:logback-core")
+	implementation("ch.qos.logback:logback-classic")
+
 	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	annotationProcessor("org.projectlombok:lombok")
+
+	// testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
