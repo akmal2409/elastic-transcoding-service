@@ -1,5 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val kLoggingVersion = "5.1.0"
+val springMockkVersion = "4.0.2"
+
 plugins {
 	id("org.springframework.boot") version "3.1.5"
 	id("io.spring.dependency-management") version "1.1.3"
@@ -43,9 +46,12 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+	// logging
 	implementation("org.slf4j:slf4j-api")
 	implementation("ch.qos.logback:logback-core")
 	implementation("ch.qos.logback:logback-classic")
+	implementation ("io.github.oshai:kotlin-logging-jvm:$kLoggingVersion")
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
@@ -53,7 +59,10 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 
 	// testing
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude(module = "mockito-core")
+	}
+	testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
