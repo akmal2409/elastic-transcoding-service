@@ -72,7 +72,7 @@ class UploadServiceTest {
         val request = UploadRequest("test.mkv", 10, "video/x-matroska")
         val url = URL("https://test.com/some-data")
         val expectedPresignedUrl =
-            PresignedUploadUrl(url, expectedValidTo)
+            PresignedUploadUrl(url, expectedValidTo, "video.mkv")
 
         every { presigner.presignPutObject(any<PutObjectPresignRequest>()) } returns presignedRequest
         every { presignedRequest.url() } returns url

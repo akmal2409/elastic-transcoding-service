@@ -14,7 +14,7 @@ internal data class MediaUploadController(
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun generatePresignedUploadUrl(@RequestBody @Valid uploadRequest: UploadRequest): PresignedUploadUrl {
+    fun generatePresignedUploadUrl(@Valid @RequestBody uploadRequest: UploadRequest): PresignedUploadUrl {
         return uploadService.generatePresignedUrl(uploadRequest)
     }
 }

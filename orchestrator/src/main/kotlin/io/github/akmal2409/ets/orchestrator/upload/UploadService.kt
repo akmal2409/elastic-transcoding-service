@@ -25,13 +25,14 @@ data class UploadService(
 ) {
 
     fun generatePresignedUrl(uploadRequest: UploadRequest): PresignedUploadUrl {
-        require(uploadRequest.contentLength > 0) {
+        require(uploadRequest.contentLength != null &&
+                uploadRequest.contentLength > 0) {
             "Invalid contentLength supplied. Expected at least 1 byte. " +
                     "Received: ${uploadRequest.contentLength}"
         }
 
         val mimeType = try {
-            MimeType.valueOf(uploadRequest.contentType)
+            uploadRequest.contentType?.let(MimeType::valueOf)
         } catch (e: RuntimeException) {
             throw IllegalArgumentException(
                 "Invalid contentType supplied. Excepted matching type/*. Received: ${uploadRequest.contentType}",
@@ -41,6 +42,8 @@ data class UploadService(
         require(allowedMediaMimeType.isCompatibleWith(mimeType)) {
             "Invalid contentType supplied. Excepted matching video/*. Received: ${uploadRequest.contentType}"
         }
+
+        requireNotNull(uploadRequest.filename) { "filename must not be null" }
 
         val mediaKey = "${UUID.randomUUID()}_${uploadRequest.filename}"
 
@@ -64,7 +67,8 @@ data class UploadService(
                     "key=$mediaKey" }
             return PresignedUploadUrl(
                 presignedUrl,
-                validity
+                validity,
+                mediaKey
             )
         } catch (exception: S3Exception) {
             logger.error(exception) {
