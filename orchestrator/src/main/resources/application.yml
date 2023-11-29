@@ -3,3 +3,11 @@ spring:
     name: "orchestrator"
   datasource:
     driver-class-name: org.postgresql.Driver
+
+  flyway:
+    validate-migration-naming: true
+
+app:
+  messaging:
+    rabbit-queues:
+      raw-file-uploaded: 's3-raw-file-uploaded'

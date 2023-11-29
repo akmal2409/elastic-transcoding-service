@@ -15,11 +15,39 @@ services:
       timeout: 5s
       retries: 5
     environment:
-      MINIO_SERVER_URL: "http://localhost"
+      MINIO_SERVER_URL: "http://localhost:9000"
+      MINIO_ROOT_USER_FILE: /run/secrets/minio_access_key
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_secret_key
     volumes:
       - "s3-01_data:/data"
     networks:
       - transcoding
+    secrets:
+      - minio_access_key
+      - minio_secret_key
+
+  configure-minio:
+    image: "minio/mc:latest"
+    container_name: "configure-minio"
+    depends_on:
+      - s3-01
+    environment:
+      ACCESS_KEY_FILE: /run/secrets/minio_access_key
+      SECRET_KEY_FILE: /run/secrets/minio_secret_key
+      AMQP_USER_FILE: /run/secrets/rabbitmq_user
+      AMQP_PASSWORD_FILE: /run/secrets/rabbitmq_password
+      AMQP_HOST: "rabbit-01:5672"
+      ENDPOINT: "http://s3-01:9000"
+    volumes:
+      - "./config/dev/minio_config.sh:/etc/init.sh:r"
+    entrypoint: ["/bin/sh", "/etc/init.sh"]
+    networks:
+      - transcoding
+    secrets:
+      - minio_access_key
+      - minio_secret_key
+      - rabbitmq_user
+      - rabbitmq_password
 
   rabbit-01:
     image: rabbitmq:3.10.25-management-alpine
@@ -33,6 +61,16 @@ services:
       - "rabbit-01_data:/var/lib/rabbitmq"
     networks:
       - transcoding
+    entrypoint: [
+        "/bin/bash", 
+        "-c", 
+        "export RABBITMQ_DEFAULT_USER=$(cat /run/secrets/rabbitmq_user);\
+         export RABBITMQ_DEFAULT_PASS=$(cat /run/secrets/rabbitmq_password);\
+         source /usr/local/bin/docker-entrypoint.sh rabbitmq-server"
+        ]
+    secrets:
+      - rabbitmq_user
+      - rabbitmq_password
   
   postgres-01:
     image: postgres:alpine3.18
@@ -59,3 +97,13 @@ volumes:
 networks:
   transcoding:
     driver: bridge
+  
+secrets:
+  minio_access_key:
+    file: ".secrets/minio_access_key.txt"
+  minio_secret_key:
+    file: ".secrets/minio_secret_key.txt"
+  rabbitmq_user:
+    file: ".secrets/rabbitmq_user.txt"
+  rabbitmq_password:
+    file: ".secrets/rabbitmq_password.txt"

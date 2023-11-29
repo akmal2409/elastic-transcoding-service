@@ -4,6 +4,11 @@ spring:
     password: ${DB_PASSWORD}
     url: "jdbc:postgresql://localhost:5432/orchestrator"
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    password: ${RABBIT_PASSWORD}
+    username: ${RABBIT_USER}
 
 app:
   aws:

@@ -45,7 +45,7 @@ data class UploadService(
 
         requireNotNull(uploadRequest.filename) { "filename must not be null" }
 
-        val mediaKey = "${UUID.randomUUID()}_${uploadRequest.filename}"
+        val mediaKey = "uploaded/${UUID.randomUUID()}_${uploadRequest.filename}"
 
         val putObjectRequest = PutObjectRequest.builder()
             .bucket(uploadConfigProperties.mediaBucket)
