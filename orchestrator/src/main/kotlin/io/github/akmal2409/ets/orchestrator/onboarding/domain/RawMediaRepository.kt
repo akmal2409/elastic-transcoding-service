@@ -1,6 +1,8 @@
 package io.github.akmal2409.ets.orchestrator.onboarding.domain
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.akmal2409.ets.orchestrator.commons.db.OptimisticLockingException
+import org.apache.logging.log4j.util.Unbox
 import org.springframework.dao.DataRetrievalFailureException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -15,7 +17,8 @@ const val RAW_MEDIA_TABLE_NAME = "raw_media"
 
 @Repository
 data class RawMediaRepository(
-    val jdbcTemplate: JdbcTemplate
+    val jdbcTemplate: JdbcTemplate,
+    val objectMapper: ObjectMapper
 ) {
 
     fun findAll(pageable: Pageable): Page<RawMedia> {
@@ -23,9 +26,16 @@ data class RawMediaRepository(
             RowMapper { rs, _ -> rs.getLong("total") })
             .firstOrNull() ?: throw DataRetrievalFailureException("Could not fetch count of rows")
 
-        val items = jdbcTemplate.query(
-            "SELECT id, name, unboxed, version FROM $RAW_MEDIA_TABLE_NAME",
-            ::rowMapper
+        val items = jdbcTemplate.query("""
+            SELECT m.id as id, m.name as name, m.unboxed as unboxed, m.version as version,
+                uj.id as job_id, uj.status as job_status, uj.started_at as job_started_at,
+                uj.completed_at as job_completed_at, uj.version as job_version, 
+                uj.unboxed_files as job_unboxed_files
+            FROM $RAW_MEDIA_TABLE_NAME m
+            LEFT JOIN $UNBOXING_JOB_TABLE_NAME uj ON m.id = uj.raw_media_id AND uj.status = '${UnboxingJob.Status.STARTED}'
+            LIMIT ? OFFSET ?
+        """.trimIndent(),
+            ::rowMapper, pageable.pageSize, pageable.offset
         )
 
         return PageImpl(items, pageable, itemCount)
@@ -67,13 +77,25 @@ data class RawMediaRepository(
         return withHigherVersion
     }
 
-    private fun rowMapper(resultSet: ResultSet, rowNum: Int) =
-        RawMedia(
-            RawMediaKey(
-                resultSet.getObject("id", UUID::class.java),
-                resultSet.getString("name")
-            ),
-            resultSet.getBoolean("unboxed"),
-            resultSet.getLong("version")
+    private fun rowMapper(resultSet: ResultSet, rowNum: Int): RawMedia {
+        val mediaKey = RawMediaKey(
+            resultSet.getObject("id", UUID::class.java),
+            resultSet.getString("name")
         )
+
+        val pendingJob: UnboxingJob? = resultSet.getObject("job_id", UUID::class.java)
+            ?.let {
+                UnboxingJob(it, mediaKey, UnboxingJob.Status.valueOf(resultSet.getString("job_status")),
+                    resultSet.getTimestamp("job_started_at").toInstant(),
+                    resultSet.getTimestamp("job_completed_at")?.let { it.toInstant() },
+                    resultSet.getLong("job_version"),
+                    objectMapper.readValue(resultSet.getString("job_unboxed_files"), UnboxingJob.UnboxedFiles::class.java))
+            }
+        return RawMedia(
+            mediaKey,
+            resultSet.getBoolean("unboxed"),
+            resultSet.getLong("version"),
+            pendingJob
+        )
+    }
 }

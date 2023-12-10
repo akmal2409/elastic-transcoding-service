@@ -38,16 +38,17 @@ data class RawMediaKey(val id: UUID, val name: String) {
 
 data class RawMedia(
     val key: RawMediaKey, val unboxed: Boolean, // whether the media container was unboxed
-    val version: Long
+    val version: Long, val pendingUnboxingJob: UnboxingJob? = null // can only be 1 at any time
 ) {
 
-    val rawFileS3Key = "${S3_BUCKET_NAME}/${NEW_UPLOADS_S3_KEY_PREFIX}/${key.id}_${key.name}"
-    val unboxedFilesS3KeyPrefix = "${S3_BUCKET_NAME}/${UNBOXED_S3_KEY_PREFIX}/${key.id}_${key.name}"
+    private val rawFileS3Key = "${S3_BUCKET_NAME}/${NEW_UPLOADS_S3_KEY_PREFIX}/${key.id}_${key.name}"
+    private val unboxedFilesS3KeyPrefix = "${S3_BUCKET_NAME}/${UNBOXED_S3_KEY_PREFIX}/${key.id}_${key.name}"
 
     fun beginUnboxingJob(
         jobId: UUID = UUID.randomUUID(), clock: Clock = Clock.systemUTC()
     ): Pair<UnboxingJob, BeginUnboxingJobEvent> {
-        check(unboxed) { "Media is already unboxed" }
+        check(!unboxed) { "Media is already unboxed" }
+        check(pendingUnboxingJob == null) { "Media has associated pending job ${pendingUnboxingJob?.id}"}
 
         return UnboxingJob.newStarted(this.key, jobId, clock) to BeginUnboxingJobEvent(
             jobId, "s3://$rawFileS3Key", "s3://$unboxedFilesS3KeyPrefix"
