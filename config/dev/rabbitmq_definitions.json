@@ -1,0 +1,92 @@
+{
+  "queues": [
+    {
+      "name": "s3-raw-file-uploaded",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "s3-raw-file-uploaded-retry",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "s3-raw-file-uploaded-dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "media-unboxing-job-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    },
+    {
+      "name": "media-unboxing-job-completion-queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ],
+
+  "bindings": [
+    {
+      "source": "",
+      "vhost": "/",
+      "destination": "s3-raw-file-uploaded",
+      "destination_type": "queue",
+      "routing_key": "s3-raw-file-uploaded",
+      "arguments": {}
+    },
+    {
+      "source": "",
+      "vhost": "/",
+      "destination": "s3-raw-file-uploaded-retry",
+      "destination_type": "queue",
+      "routing_key": "s3-raw-file-uploaded-retry",
+      "arguments": {}
+    },
+    {
+      "source": "",
+      "vhost": "/",
+      "destination": "s3-raw-file-uploaded-dlq",
+      "destination_type": "queue",
+      "routing_key": "s3-raw-file-uploaded-dlq",
+      "arguments": {}
+    },
+    {
+      "source": "",
+      "vhost": "/",
+      "destination": "media-unboxing-job-queue",
+      "destination_type": "queue",
+      "routing_key": "media-unboxing-job-queue",
+      "arguments": {}
+    },
+    {
+      "source": "",
+      "vhost": "/",
+      "destination": "media-unboxing-job-completion-queue",
+      "destination_type": "queue",
+      "routing_key": "media-unboxing-job-completion-queue",
+      "arguments": {}
+    }
+  ]
+}

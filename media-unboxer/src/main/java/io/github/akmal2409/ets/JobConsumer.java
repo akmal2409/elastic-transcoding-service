@@ -59,8 +59,8 @@ public class JobConsumer extends DefaultConsumer {
       return;
     }
 
-    log.debug("message=Received job;job_id={};worker={}",
-        job.jobId(), WorkerConstants.WORKER_NAME);
+    log.debug("message=Received job;job_id={};source={};output={};worker={}",
+        job.jobId(), job.source(), job.out(), WorkerConstants.WORKER_NAME);
 
     try {
       validateJob(job);

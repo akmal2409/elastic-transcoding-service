@@ -10,12 +10,14 @@ CREATE TABLE raw_media
 
 CREATE TABLE unboxing_job
 (
-    id           UUID PRIMARY KEY,
-    raw_media_id UUID        NOT NULL,
-    status       VARCHAR(40) NOT NULL,
-    started_at   TIMESTAMP   NOT NULL,
-    completed_at TIMESTAMP,
-    version      INTEGER,
+    id             UUID PRIMARY KEY,
+    raw_media_id   UUID         NOT NULL,
+    raw_media_name VARCHAR(255) NOT NULL,
+    status         VARCHAR(40)  NOT NULL,
+    started_at     TIMESTAMP    NOT NULL,
+    completed_at   TIMESTAMP,
+    version        BIGINT DEFAULT 0,
+    unboxed_files  JSONB,
 
-    FOREIGN KEY (raw_media_id) REFERENCES raw_media(id)
+    FOREIGN KEY (raw_media_id) REFERENCES raw_media (id)
 )

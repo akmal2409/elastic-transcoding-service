@@ -56,7 +56,7 @@ public class MediaStore {
 
     Path jobDirectory;
     log.debug("message=Preparing to download video;job_id={}bucket={};file={}", jobId, s3Source.getBucket(),
-        s3Source.getBucket());
+        s3Source.getKey());
     try {
       jobDirectory = createJobDirectoryOrElseFail(jobId);
       log.debug("message=Created job directory {};jobId={}", jobDirectory, jobId);
@@ -69,7 +69,7 @@ public class MediaStore {
     final FileDownload download = s3TransferManager
                                       .downloadFile(
                                           DownloadFileRequest.builder()
-                                              .getObjectRequest(b -> b.bucket(s3Source.getBucket()).key(s3Source.getKey()))
+                                              .getObjectRequest(b -> b.bucket(s3Source.getBucket()).key( s3Source.getKey()))
                                               .destination(filePath)
                                               .addTransferListener(
                                                   LoggingTransferListener.create())

@@ -59,6 +59,8 @@ services:
       - "15672:15672"
     volumes:
       - "rabbit-01_data:/var/lib/rabbitmq"
+      - "./config/dev/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - "./config/dev/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json:ro"
     networks:
       - transcoding
     entrypoint: [

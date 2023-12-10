@@ -11,3 +11,7 @@ app:
   messaging:
     rabbit-queues:
       raw-file-uploaded: 's3-raw-file-uploaded'
+      raw-file-uploaded-retry: 's3-raw-file-uploaded-retry'
+      raw-file-uploaded-dlq: 's3-raw-file-uploaded-dlq'
+      media-unboxing-queue: 'media-unboxing-job-queue'
+      media-unboxing-job-completion-queue: 'media-unboxing-job-completion-queue'

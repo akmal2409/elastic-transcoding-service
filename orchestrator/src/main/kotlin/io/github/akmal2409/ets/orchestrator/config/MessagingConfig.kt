@@ -7,7 +7,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 data class RabbitQueues(
-    val rawFileUploaded: String
+    val rawFileUploaded: String,
+    val rawFileUploadedRetry: String,
+    val rawFileUploadedDlq: String,
+    val mediaUnboxingQueue: String,
+    val mediaUnboxingJobCompletionQueue: String
 )
 
 @ConfigurationProperties(prefix = "app.messaging")

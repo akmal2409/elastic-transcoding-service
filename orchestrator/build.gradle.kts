@@ -68,6 +68,7 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:localstack")
+	testImplementation("org.testcontainers:rabbitmq")
 }
 
 tasks.withType<KotlinCompile> {
