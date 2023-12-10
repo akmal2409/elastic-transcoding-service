@@ -45,7 +45,8 @@ data class UploadService(
 
         requireNotNull(uploadRequest.filename) { "filename must not be null" }
 
-        val mediaKey = "uploaded/${UUID.randomUUID()}_${uploadRequest.filename}"
+        val fileKey = "${UUID.randomUUID()}_${uploadRequest.filename}"
+        val mediaKey = "uploaded/$fileKey"
 
         val putObjectRequest = PutObjectRequest.builder()
             .bucket(uploadConfigProperties.mediaBucket)
@@ -68,7 +69,7 @@ data class UploadService(
             return PresignedUploadUrl(
                 presignedUrl,
                 validity,
-                mediaKey
+                fileKey
             )
         } catch (exception: S3Exception) {
             logger.error(exception) {

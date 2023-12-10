@@ -4,6 +4,7 @@ import io.github.akmal2409.ets.orchestrator.configureLocalstack
 import io.github.akmal2409.ets.orchestrator.configurePostgres
 import io.github.akmal2409.ets.orchestrator.createLocalStack
 import io.github.akmal2409.ets.orchestrator.createPostgres
+import io.github.akmal2409.ets.orchestrator.onboarding.domain.NEW_UPLOADS_S3_KEY_PREFIX
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -132,7 +133,7 @@ class UploadServiceIT {
         assertThatNoException().isThrownBy {
             s3Client.headObject {
                 it.bucket(TEST_BUCKET_NAME)
-                    .key(presignedUrl?.objectKey)
+                    .key("$NEW_UPLOADS_S3_KEY_PREFIX/${presignedUrl.objectKey}")
             }
         }
 

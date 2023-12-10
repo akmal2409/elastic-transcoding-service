@@ -47,9 +47,7 @@ data class RawMedia(
     fun beginUnboxingJob(
         jobId: UUID = UUID.randomUUID(), clock: Clock = Clock.systemUTC()
     ): Pair<UnboxingJob, BeginUnboxingJobEvent> {
-        if (unboxed) {
-            throw IllegalStateException("Media is already unboxed")
-        }
+        check(unboxed) { "Media is already unboxed" }
 
         return UnboxingJob.newStarted(this.key, jobId, clock) to BeginUnboxingJobEvent(
             jobId, "s3://$rawFileS3Key", "s3://$unboxedFilesS3KeyPrefix"

@@ -1,12 +1,12 @@
 package io.github.akmal2409.ets.orchestrator.upload
 
+import io.github.akmal2409.ets.orchestrator.onboarding.domain.RawMediaKey
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.SpyK
 import io.mockk.junit5.MockKExtension
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
@@ -82,6 +82,12 @@ class UploadServiceTest {
 
         assertThat(actualPresignedUrl)
             .usingRecursiveComparison()
+            .ignoringFields("objectKey")
             .isEqualTo(expectedPresignedUrl)
+
+        assertThatNoException().isThrownBy {
+            RawMediaKey.fromString(actualPresignedUrl.objectKey)
+        }
+
     }
 }
