@@ -11,21 +11,21 @@ public record MediaCollection(
 ) {
 
   public static record Video(
-      String fileName,
+      String filename,
       String codec,
       int width,
       int height
   ) {}
 
   public static record Audio(
-      String fileName,
+      String filename,
       String codec,
       String lang
   ) {
   }
 
   public static record Subtitles(
-      String fileName,
+      String filename,
       String codec,
       String lang
   ) {}

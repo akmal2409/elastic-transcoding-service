@@ -2,14 +2,18 @@ package io.github.akmal2409.ets.orchestrator.onboarding.controller
 
 import io.github.akmal2409.ets.orchestrator.onboarding.controller.dto.PageDto
 import io.github.akmal2409.ets.orchestrator.onboarding.controller.dto.RawMediaDto
+import io.github.akmal2409.ets.orchestrator.onboarding.domain.RawMedia
 import io.github.akmal2409.ets.orchestrator.onboarding.service.RawMediaService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @RequestMapping(RawMediaController.BASE_PATH)
@@ -34,4 +38,9 @@ data class RawMediaController(
             .map(RawMediaDto::from)
     )
 
+    @GetMapping("/{id}")
+    fun findById(@PathVariable id: UUID): ResponseEntity<RawMediaDto> =
+        mediaService.findById(id)?.let {
+            ResponseEntity.ok(RawMediaDto.from(it))
+        } ?: ResponseEntity.notFound().build()
 }

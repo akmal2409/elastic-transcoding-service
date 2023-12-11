@@ -2,6 +2,7 @@ package io.github.akmal2409.ets.orchestrator.onboarding.service
 
 import io.github.akmal2409.ets.orchestrator.commons.db.OptimisticLockingException
 import io.github.akmal2409.ets.orchestrator.config.MessagingProperties
+import io.github.akmal2409.ets.orchestrator.onboarding.controller.dto.unboxing.UnboxingCompletedEvent
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.amqp.AmqpException
@@ -53,6 +54,17 @@ data class RawMediaService(
         beginUnboxingJob(rawMedia)
 
         return rawMedia
+    }
+
+    @Transactional
+    fun onUnboxingComplete(completedEvent: UnboxingCompletedEvent) {
+        val media = rawMediaRepository.findByJobId(completedEvent.jobId)
+            ?: throw UnboxingJobNotFoundException("${completedEvent.jobId} was not found")
+
+        val (unboxedMedia, job) = media.completeUnboxing(clock, completedEvent.toDomainUnboxedFiles())
+
+        rawMediaRepository.update(unboxedMedia)
+        unboxingJobRepository.update(job)
     }
 
     private fun beginUnboxingJob(rawMedia: RawMedia): UnboxingJob {
@@ -109,7 +121,7 @@ data class RawMediaService(
         return media
     }
 
-    fun findAll(page: Int, size: Int): Page<RawMedia> {
-        return rawMediaRepository.findAll(PageRequest.of(page, size))
-    }
+    fun findAll(page: Int, size: Int): Page<RawMedia> = rawMediaRepository.findAll(PageRequest.of(page, size))
+
+    fun findById(id: UUID): RawMedia? = rawMediaRepository.findById(id)
 }

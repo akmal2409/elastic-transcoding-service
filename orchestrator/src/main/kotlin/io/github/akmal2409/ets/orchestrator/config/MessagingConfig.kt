@@ -1,5 +1,6 @@
 package io.github.akmal2409.ets.orchestrator.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -24,5 +25,5 @@ data class MessagingProperties(
 class MessagingConfig {
 
     @Bean
-    fun jsonMessageConverter() = Jackson2JsonMessageConverter()
+    fun jsonMessageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 }

@@ -41,6 +41,25 @@ data class RawMediaRepository(
         return PageImpl(items, pageable, itemCount)
     }
 
+    fun findById(id: UUID): RawMedia? = jdbcTemplate.query("""
+        SELECT m.id as id, m.name as name, m.unboxed as unboxed, m.version as version,
+                        uj.id as job_id, uj.status as job_status, uj.started_at as job_started_at,
+                        uj.completed_at as job_completed_at, uj.version as job_version, 
+                        uj.unboxed_files as job_unboxed_files
+                    FROM $RAW_MEDIA_TABLE_NAME m
+                    LEFT JOIN $UNBOXING_JOB_TABLE_NAME uj ON m.id = uj.raw_media_id AND uj.status = '${UnboxingJob.Status.STARTED}'
+                    WHERE m.id = ?
+    """.trimIndent(), ::rowMapper, id).firstOrNull()
+
+    fun findByJobId(id: UUID): RawMedia? = jdbcTemplate.query("""
+        SELECT m.id as id, m.name as name, m.unboxed as unboxed, m.version as version,
+                        uj.id as job_id, uj.status as job_status, uj.started_at as job_started_at,
+                        uj.completed_at as job_completed_at, uj.version as job_version, 
+                        uj.unboxed_files as job_unboxed_files
+                    FROM $RAW_MEDIA_TABLE_NAME m
+                    INNER JOIN $UNBOXING_JOB_TABLE_NAME uj ON uj.id = ? AND m.id = uj.raw_media_id AND uj.status = '${UnboxingJob.Status.STARTED}'
+    """.trimIndent(), ::rowMapper, id).firstOrNull()
+
     fun insert(rawMedia: RawMedia): RawMedia {
         jdbcTemplate.update(
             """

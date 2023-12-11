@@ -47,8 +47,14 @@ data class UnboxingJobRepository(
             UPDATE $UNBOXING_JOB_TABLE_NAME
             SET status = ?, started_at = ?, completed_at = ?, version = ?, unboxed_files = ?::JSONB
             WHERE id = ? AND version = ?
-        """.trimIndent(), updatedJob.status, unboxingJob.startedAt, updatedJob.completedAt,
-            updatedJob.version, updatedJob.unboxedFiles, updatedJob.id, unboxingJob.version
+        """.trimIndent(),
+            updatedJob.status.name,
+            Timestamp.from(unboxingJob.startedAt),
+            updatedJob.completedAt?.let(Timestamp::from),
+            updatedJob.version,
+            objectMapper.writeValueAsString(updatedJob.unboxedFiles),
+            updatedJob.id,
+            unboxingJob.version
         )
 
         if (rowsAffected == 0) {

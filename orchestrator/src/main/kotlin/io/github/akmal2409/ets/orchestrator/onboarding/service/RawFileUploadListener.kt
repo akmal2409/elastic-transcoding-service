@@ -3,6 +3,7 @@ package io.github.akmal2409.ets.orchestrator.onboarding.service
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.akmal2409.ets.orchestrator.config.MessagingProperties
+import io.github.akmal2409.ets.orchestrator.onboarding.controller.dto.unboxing.UnboxingCompletedEvent
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.NonRecoverableRawFileException
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.RawFileCreateRequest
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.RecoverableRawFileException
@@ -99,6 +100,13 @@ data class RawFileUploadListener(
     fun listenToDql(msg: UploadEvent) {
         logger.error { "message=Received DLQ message $msg;service=rabbitmq" }
     }
+
+
+    @RabbitListener(
+        queues = ["\${app.messaging.rabbit-queues.media-unboxing-job-completion-queue}"],
+        messageConverter = "jsonMessageConverter"
+    ) // TODO: Better error handling
+    fun listenToUnboxingCompletion(event: UnboxingCompletedEvent) = rawMediaService.onUnboxingComplete(event)
 
     private fun rejectToDlq(event: UploadEvent, retryCount: Int) =
         this.rabbitTemplate.convertAndSend(

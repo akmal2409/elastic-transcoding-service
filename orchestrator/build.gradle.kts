@@ -40,6 +40,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 	// misc
