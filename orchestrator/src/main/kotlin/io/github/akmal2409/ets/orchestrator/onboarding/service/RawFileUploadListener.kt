@@ -7,6 +7,7 @@ import io.github.akmal2409.ets.orchestrator.onboarding.controller.dto.unboxing.U
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.NonRecoverableRawFileException
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.RawFileCreateRequest
 import io.github.akmal2409.ets.orchestrator.onboarding.domain.RecoverableRawFileException
+import io.github.akmal2409.ets.orchestrator.onboarding.domain.UnboxingJobNotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -105,10 +106,52 @@ data class RawFileUploadListener(
     @RabbitListener(
         queues = ["\${app.messaging.rabbit-queues.media-unboxing-job-completion-queue}"],
         messageConverter = "jsonMessageConverter"
-    ) // TODO: Better error handling
-    fun listenToUnboxingCompletion(event: UnboxingCompletedEvent) = rawMediaService.onUnboxingComplete(event)
+    )
+    fun listenToUnboxingCompletion(
+        event: UnboxingCompletedEvent,
+        @Header(RETRY_COUNT_HEADER_KEY) retryCount: Int?
+    ) {
+        if ((retryCount ?: 0) > MAX_RETRY_COUNT) {
+            logger.error { "message=Dropping raw file unboxing completion. Max retries exceeded;key=${event.jobId};service=rabbitmq" }
+            rejectToDlq(event, retryCount ?: 0)
+            return
+        }
+
+        logger.info { "message=Received media unboxing complete event ${event.jobId};type=job;job_type=unboxing;service=rabbitmq" }
+
+        try {
+            rawMediaService.onUnboxingComplete(event)
+        } catch (ex: Throwable) {
+            logger.error { "message=Exception when completing unboxing ${event.jobId};type=job;job_type=unboxing" }
+            when (ex) {
+                is IllegalStateException, is UnboxingJobNotFoundException -> rejectToDlq(
+                    event,
+                    retryCount ?: 0
+                )
+
+                else -> rabbitTemplate.convertAndSend(
+                    messagingProperties.rabbitQueues.rawFileUploadedRetry,
+                    event
+                ) { processor ->
+                    processor.messageProperties.headers[RETRY_COUNT_HEADER_KEY] =
+                        (retryCount ?: 0) + 1
+                    processor
+                }
+
+            }
+        }
+    }
 
     private fun rejectToDlq(event: UploadEvent, retryCount: Int) =
+        this.rabbitTemplate.convertAndSend(
+            messagingProperties.rabbitQueues.rawFileUploadedDlq,
+            event
+        ) {
+            it.messageProperties.headers[RETRY_COUNT_HEADER_KEY] = retryCount
+            it
+        }
+
+    private fun rejectToDlq(event: UnboxingCompletedEvent, retryCount: Int) =
         this.rabbitTemplate.convertAndSend(
             messagingProperties.rabbitQueues.rawFileUploadedDlq,
             event
